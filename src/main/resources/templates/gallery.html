@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Gallery - 35mmFilm</title>
+    <meta name="theme-color" content="#121212">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" type="image/png" th:href="@{/favicon.png}">
+    <link rel="apple-touch-icon" th:href="@{/favicon.png}">
+    <link rel="manifest" th:href="@{/manifest.webmanifest}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZHLJ07G3SG"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-ZHLJ07G3SG');
+</script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a th:href="@{/dashboard}" class="navbar-brand">
+                <img th:src="@{/favicon.png}" alt="Logo">
+                35mmFilm
+            </a>
+            <div class="navbar-nav">
+                <a th:href="@{/dashboard}">Back to Dashboard</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="flex-between mb-4 mt-4">
+            <h2>All Photos</h2>
+            <a th:href="@{/gallery(sort=${currentSort == 'asc' ? 'desc' : 'asc'})}" class="btn btn-secondary" style="font-size: 0.9rem;">
+                <span th:if="${currentSort == 'desc'}">Oldest First ⬆️</span>
+                <span th:if="${currentSort == 'asc'}">Newest First ⬇️</span>
+            </a>
+        </div>
+
+        <div id="gallery-view" class="gallery-grid">
+            <div th:each="photo : ${photos}" class="gallery-item-container" th:if="${photo.imageUrl != null}" 
+                 style="cursor: pointer;"
+                 th:data-url="${photo.imageUrl}"
+                 th:data-num="${photo.photoNumber}"
+                 th:data-roll="${photo.filmRoll.name}"
+                 th:data-iso="${photo.filmRoll.iso}"
+                 th:data-date="${#temporals.format(photo.timestamp, 'dd-MM-yyyy HH:mm')}"
+                 th:data-aperture="${photo.aperture != null ? photo.aperture : '--'}"
+                 th:data-exposure="${photo.exposure != null ? photo.exposure : '--'}"
+                 th:data-wb="${photo.whiteBalance != null ? photo.whiteBalance : '--'}"
+                 th:data-lat="${photo.latitude}"
+                 th:data-lng="${photo.longitude}"
+                 onclick="openPhotoViewer(this)">
+                <div class="gallery-item">
+                    <img th:src="${photo.thumbnailUrl}" alt="Photo">
+                </div>
+                <div class="gallery-item-info" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <span style="font-size: 0.8rem; font-weight: bold;" th:text="${photo.filmRoll.name} + ' - #' + ${photo.photoNumber}"></span>
+                    <span style="font-size: 0.8rem; background: var(--bg-hover); padding: 2px 5px; border-radius: 4px; color: var(--text);" th:text="${#temporals.format(photo.timestamp, 'dd-MM-yyyy')}"></span>
+                </div>
+            </div>
+            
+            <div th:if="${#lists.isEmpty(photos)}" style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-secondary);">
+                No photos yet. Go shoot some film!
+            </div>
+        </div>
+
+        <!-- Photo Viewer Modal -->
+        <div id="photoViewerModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center;">
+            <div class="photo-viewer-container">
+                <button type="button" class="btn-close-viewer" onclick="closePhotoViewer()">×</button>
+                <div class="photo-viewer-image">
+                    <img id="viewerImage" src="" alt="Photo Full View">
+                </div>
+                <div class="photo-viewer-metadata">
+                    <h3 style="margin-top: 0;">Photo #<span id="viewerNum"></span></h3>
+                    <p class="text-secondary" style="margin: 0; font-size: 0.9rem;" id="viewerRoll"></p>
+                    <p class="text-secondary" id="viewerDate" style="margin-bottom: 1.5rem;"></p>
+                    
+                    <div class="metadata-grid">
+                        <div class="metadata-item">
+                            <span class="metadata-label">ISO</span>
+                            <span class="metadata-value" id="viewerIso"></span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Aperture</span>
+                            <span class="metadata-value" id="viewerAperture"></span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Exposure</span>
+                            <span class="metadata-value" id="viewerExposure"></span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">WB</span>
+                            <span class="metadata-value" id="viewerWb"></span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 2rem;">
+                        <a id="viewerMapLink" href="#" target="_blank" class="btn btn-block" style="text-align: center;">View on Map</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="app-footer">
+            <p>&copy; 2026 35mmFilm. <a th:href="@{/license}">All rights reserved.</a></p>
+        </footer>
+
+    </div>
+
+    <script>
+        function openPhotoViewer(element) {
+            const url = element.getAttribute('data-url');
+            const num = element.getAttribute('data-num');
+            const roll = element.getAttribute('data-roll');
+            const iso = element.getAttribute('data-iso');
+            const date = element.getAttribute('data-date');
+            const aperture = element.getAttribute('data-aperture');
+            const exposure = element.getAttribute('data-exposure');
+            const wb = element.getAttribute('data-wb');
+            const lat = element.getAttribute('data-lat');
+            const lng = element.getAttribute('data-lng');
+
+            document.getElementById('viewerImage').src = url;
+            document.getElementById('viewerNum').innerText = num;
+            document.getElementById('viewerRoll').innerText = roll;
+            document.getElementById('viewerDate').innerText = date;
+            document.getElementById('viewerIso').innerText = iso;
+            document.getElementById('viewerAperture').innerText = aperture;
+            document.getElementById('viewerExposure').innerText = exposure;
+            document.getElementById('viewerWb').innerText = wb;
+
+            const mapLink = document.getElementById('viewerMapLink');
+            if (lat && lng && lat !== '0.0' && lng !== '0.0') {
+                mapLink.href = 'https://www.google.com/maps?q=' + lat + ',' + lng;
+                mapLink.style.display = 'block';
+            } else {
+                mapLink.style.display = 'none';
+            }
+
+            document.getElementById('photoViewerModal').style.display = 'flex';
+        }
+
+        function closePhotoViewer() {
+            document.getElementById('photoViewerModal').style.display = 'none';
+            document.getElementById('viewerImage').src = '';
+        }
+
+        // Close modal when clicking outside the container
+        document.getElementById('photoViewerModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePhotoViewer();
+            }
+        });
+    </script>
+</body>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function() {
+    navigator.serviceWorker.register("/service-worker.js");
+  });
+}
+</script>
+</html>

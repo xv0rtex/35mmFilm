@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - 35mmFilm</title>
+    <meta name="theme-color" content="#121212">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" type="image/png" th:href="@{/favicon.png}">
+    <link rel="apple-touch-icon" th:href="@{/favicon.png}">
+    <link rel="manifest" th:href="@{/manifest.webmanifest}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZHLJ07G3SG"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-ZHLJ07G3SG');
+</script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a th:href="@{/dashboard}" class="navbar-brand">
+                <img th:src="@{/favicon.png}" alt="Logo">
+                35mmFilm
+            </a>
+            <div class="navbar-nav">
+                <a th:href="@{/dashboard}">Back to Dashboard</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="text-align: center; display: flex; flex-direction: column; align-items: center; min-height: 60vh;">
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;">
+            <h1 style="font-size: 4rem; margin-bottom: 1rem; color: var(--text-primary);">Oops!</h1>
+            <h2 style="margin-bottom: 1.5rem; color: var(--text-secondary);">Something went wrong.</h2>
+            
+            <p th:if="${status}" style="font-size: 1.2rem;">Error Code: <span th:text="${status}">500</span></p>
+            <p th:if="${error}" style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 2rem;" th:text="${error}">Unexpected Error</p>
+            
+            <div th:if="${message}" style="background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 2rem; max-width: 600px;">
+                <code th:text="${message}" style="color: var(--text-primary);">Error details</code>
+            </div>
+
+            <a th:href="@{/dashboard}" class="btn">Return to Dashboard</a>
+        </div>
+        
+        <footer class="app-footer" style="width: 100%;">
+            <p>&copy; 2026 35mmFilm. <a th:href="@{/license}">All rights reserved.</a></p>
+        </footer>
+    </div>
+</body>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function() {
+    navigator.serviceWorker.register("/service-worker.js");
+  });
+}
+</script>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${camera.name} + ' - 35mmFilm'">Camera Detail - 35mmFilm</title>
+    <meta name="theme-color" content="#121212">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" type="image/png" th:href="@{/favicon.png}">
+    <link rel="apple-touch-icon" th:href="@{/favicon.png}">
+    <link rel="manifest" th:href="@{/manifest.webmanifest}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZHLJ07G3SG"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-ZHLJ07G3SG');
+</script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a th:href="@{/dashboard}" class="navbar-brand">
+                <img th:src="@{/favicon.png}" alt="Logo">
+                35mmFilm
+            </a>
+            <div class="navbar-nav">
+                <a th:href="@{/dashboard}">Back to Dashboard</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="detail-header">
+            <div class="detail-image">
+                <img th:if="${camera.imagePath}" th:src="@{${camera.imagePath}}" alt="Camera Image">
+                <div th:unless="${camera.imagePath}" style="color: var(--text-secondary);">
+                    <span>No Image</span>
+                </div>
+            </div>
+            <div class="detail-info">
+                <span class="badge" th:text="${camera.type}">TYPE</span>
+                <h1 th:text="${camera.name}">Camera Name</h1>
+                <p><strong>Purchased:</strong> <span th:text="${camera.purchaseDate}">Date</span></p>
+                <p th:text="${camera.description}">Description</p>
+                <div class="mt-4">
+                    <a th:href="@{'/cameras/' + ${camera.id} + '/edit'}" class="btn btn-secondary">Edit Camera</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Film Rolls Section (Only for Analog) -->
+        <div th:if="${camera.type.name() == 'ANALOG'}">
+            <div class="flex-between mb-4">
+                <h2>Film Rolls</h2>
+                <a th:href="@{'/cameras/' + ${camera.id} + '/rolls/new'}" class="btn">Add Film Roll</a>
+            </div>
+
+            <div class="grid">
+                <div th:each="roll : ${rolls}" class="card">
+                    <div class="card-body">
+                        <span class="badge" th:text="${roll.brand}">Brand</span>
+                        <span class="badge" th:text="'ISO ' + ${roll.iso}">ISO</span>
+                        <span class="badge" th:text="${roll.status.displayName}">Status</span>
+                        <h3 th:text="${roll.name}">Roll Name</h3>
+                        <p th:text="${roll.description}">Description</p>
+                        <p><small>Expires: <span th:text="${roll.expiryDate}">Date</span></small></p>
+                        <a th:href="@{'/rolls/' + ${roll.id}}" class="btn btn-block">View Roll</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div th:if="${#lists.isEmpty(rolls)}" class="text-center">
+                <p>No film rolls added yet.</p>
+            </div>
+        </div>
+        
+        <footer class="app-footer">
+            <p>&copy; 2026 35mmFilm. <a th:href="@{/license}">All rights reserved.</a></p>
+        </footer>
+    </div>
+</body>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function() {
+    navigator.serviceWorker.register("/service-worker.js");
+  });
+}
+</script>
+</html>

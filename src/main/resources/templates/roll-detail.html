@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${roll.name} + ' - 35mmFilm'">Roll Detail - 35mmFilm</title>
+    <meta name="theme-color" content="#121212">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" type="image/png" th:href="@{/favicon.png}">
+    <link rel="apple-touch-icon" th:href="@{/favicon.png}">
+    <link rel="manifest" th:href="@{/manifest.webmanifest}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZHLJ07G3SG"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-ZHLJ07G3SG');
+</script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a th:href="@{/dashboard}" class="navbar-brand">
+                <img th:src="@{/favicon.png}" alt="Logo">
+                35mmFilm
+            </a>
+            <div class="navbar-nav">
+                <a th:href="@{'/cameras/' + ${roll.camera.id}}">Back to Camera</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="roll-header">
+            <div class="flex-between" style="align-items: flex-start;">
+                <div>
+                    <span class="badge" th:text="${roll.brand}">Brand</span>
+                    <span class="badge" th:text="'ISO ' + ${roll.iso}">ISO</span>
+                    <span class="badge" th:text="${roll.filmType}">Type</span>
+                    <span class="badge" th:if="${roll.pushPull != 0}" th:text="${roll.pushPull > 0 ? '+' + roll.pushPull : roll.pushPull} + ' Push/Pull'">Push/Pull</span>
+                    <span class="badge" th:text="${roll.status.displayName}">Status</span>
+                    <h1 th:text="${roll.name}">Roll Name</h1>
+                    <p th:text="${roll.description}">Description</p>
+                </div>
+                <div style="text-align: right;">
+                    <p><strong>Purchased:</strong> <span th:text="${roll.purchaseDate}">Date</span></p>
+                    <p th:if="${roll.loadDate != null}"><strong>Loaded:</strong> <span th:text="${roll.loadDate}">Date</span></p>
+                    <p><strong>Expires:</strong> <span th:text="${roll.expiryDate}">Date</span></p>
+                    <p th:if="${roll.filmPrice != null}"><strong>Film Price:</strong> <span th:text="${roll.filmPrice} + ' €'">0.00 €</span></p>
+                    <p th:if="${roll.developmentPrice != null}"><strong>Dev Price:</strong> <span th:text="${roll.developmentPrice} + ' €'">0.00 €</span></p>
+                    <div class="mt-4" style="display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
+                        <a th:if="${roll.status.name() == 'DEVELOPED'}" href="#" onclick="toggleUploadMode(event)" class="btn">Upload Photos</a>
+                        <a th:href="@{'/rolls/' + ${roll.id} + '/edit'}" class="btn btn-secondary">Edit Roll</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-between mb-4 header-actions-mobile">
+            <h2>Photos</h2>
+            <div th:if="${roll.status.name() != 'DEVELOPED'}" class="btn-group-mobile">
+                <form th:action="@{'/rolls/' + ${roll.id} + '/photos'}" method="post" id="addPhotoForm" style="width: 100%;">
+                    <input type="hidden" name="latitude" id="latitude">
+                    <input type="hidden" name="longitude" id="longitude">
+                    <button type="button" onclick="addPhoto()" class="btn" style="width: 100%;">Quick Save</button>
+                </form>
+                <button type="button" onclick="openExpertSave()" class="btn btn-secondary" style="width: 100%;">Expert Save</button>
+            </div>
+        </div>
+
+        <!-- Normal List View -->
+        <ul th:if="${roll.status.name() != 'DEVELOPED'}" class="list-group">
+            <li th:each="photo : ${photos}" class="list-group-item photo-list-item">
+                <div class="photo-info-main">
+                    <strong>#<span th:text="${photo.photoNumber}">1</span></strong>
+                    <span class="photo-date" th:text="${#temporals.format(photo.timestamp, 'dd-MM-yyyy HH:mm')}">Date</span>
+                    <div class="photo-badges">
+                        <span class="badge photo-badge" th:text="'ISO: ' + ${roll.iso}"></span>
+                        <span th:if="${photo.aperture != null}" class="badge photo-badge" th:text="'A: ' + ${photo.aperture}"></span>
+                        <span th:if="${photo.exposure != null}" class="badge photo-badge" th:text="'E: ' + ${photo.exposure}"></span>
+                        <span th:if="${photo.whiteBalance != null}" class="badge photo-badge" th:text="'WB: ' + ${photo.whiteBalance}"></span>
+                    </div>
+                </div>
+                <div class="photo-actions">
+                    <a th:href="'https://www.google.com/maps?q=' + ${photo.latitude} + ',' + ${photo.longitude}" target="_blank" class="btn-map">Map</a>
+                    <a th:href="@{'/photos/' + ${photo.id} + '/edit'}" class="btn btn-edit-small">Edit</a>
+                </div>
+            </li>
+            <li th:if="${#lists.isEmpty(photos)}" class="list-group-item" style="justify-content: center;">
+                No photos taken yet.
+            </li>
+        </ul>
+
+        <!-- Developed Gallery View -->
+        <div th:if="${roll.status.name() == 'DEVELOPED'}" id="gallery-view" class="gallery-grid">
+            <div th:each="photo : ${photos}" class="gallery-item-container" th:if="${photo.imageUrl != null}" 
+                 style="cursor: pointer;"
+                 th:data-url="${photo.imageUrl}"
+                 th:data-num="${photo.photoNumber}"
+                 th:data-date="${#temporals.format(photo.timestamp, 'dd-MM-yyyy HH:mm')}"
+                 th:data-aperture="${photo.aperture != null ? photo.aperture : '--'}"
+                 th:data-exposure="${photo.exposure != null ? photo.exposure : '--'}"
+                 th:data-wb="${photo.whiteBalance != null ? photo.whiteBalance : '--'}"
+                 th:data-lat="${photo.latitude}"
+                 th:data-lng="${photo.longitude}"
+                 onclick="openPhotoViewer(this)">
+                <div class="gallery-item">
+                    <img th:src="${photo.thumbnailUrl}" alt="Photo">
+                </div>
+                <div class="gallery-item-info">
+                    <span style="font-weight: bold;">#<span th:text="${photo.photoNumber}"></span></span>
+                    <span style="font-size: 0.8rem; background: var(--bg-hover); padding: 2px 5px; border-radius: 4px; color: var(--text);" th:text="${#temporals.format(photo.timestamp, 'dd-MM-yyyy')}"></span>
+                </div>
+            </div>
+            <div th:if="${#lists.isEmpty(photos)}" style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-secondary);">
+                No photos yet. Upload your developed photos.
+            </div>
+        </div>
+
+        <!-- Upload Mode View (Hidden by default) -->
+        <div th:if="${roll.status.name() == 'DEVELOPED'}" id="upload-view" style="display: none;">
+            <ul class="list-group">
+                <li th:each="photo : ${photos}" class="list-group-item" style="flex-direction: column; align-items: stretch; gap: 10px;">
+                    <div class="flex-between">
+                        <div>
+                            <strong>#<span th:text="${photo.photoNumber}">1</span></strong>
+                            <span style="margin-left: 10px; color: #666;" th:text="${#temporals.format(photo.timestamp, 'dd-MM-yyyy HH:mm')}">Date</span>
+                        </div>
+                        <span th:if="${photo.imageUrl != null}" class="badge" style="background-color: var(--secondary); color: var(--text);">Uploaded</span>
+                    </div>
+                    
+                    <form th:action="@{'/photos/' + ${photo.id} + '/upload'}" method="post" enctype="multipart/form-data" class="upload-zone" style="border: 2px dashed var(--border-color); padding: 1.5rem; text-align: center; border-radius: var(--radius-sm); cursor: pointer;" onclick="this.querySelector('input').click()">
+                        <input type="file" name="image" style="display: none;" onchange="this.form.submit()" accept="image/*" capture="environment">
+                        <p style="margin: 0; color: var(--text-secondary);">Drag and drop or click to select image for Photo #<span th:text="${photo.photoNumber}"></span></p>
+                    </form>
+                </li>
+                <li th:if="${#lists.isEmpty(photos)}" class="list-group-item" style="justify-content: center;">
+                    No photos to upload. Add empty photos first.
+                </li>
+            </ul>
+        </div>
+
+        <!-- Expert Save Modal -->
+        <div id="expertSaveModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
+            <div style="background: var(--bg-card); padding: 2rem; border-radius: var(--radius); width: 90%; max-width: 500px;">
+                <h2 style="margin-top: 0;">Expert Save</h2>
+                <div style="margin-bottom: 1rem; position: relative;">
+                    <video id="cameraPreview" autoplay playsinline style="width: 100%; border-radius: var(--radius-sm); background: #000;"></video>
+                    <canvas id="cameraCanvas" style="display: none;"></canvas>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 1.5rem; text-align: center;">
+                    <div style="background: var(--bg-hover); padding: 10px; border-radius: var(--radius-sm);">
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Aperture</div>
+                        <div id="valAperture" style="font-weight: bold;">--</div>
+                    </div>
+                    <div style="background: var(--bg-hover); padding: 10px; border-radius: var(--radius-sm);">
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Exposure</div>
+                        <div id="valExposure" style="font-weight: bold;">--</div>
+                    </div>
+                    <div style="background: var(--bg-hover); padding: 10px; border-radius: var(--radius-sm);">
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">White Balance</div>
+                        <div id="valWhiteBalance" style="font-weight: bold;">--</div>
+                    </div>
+                </div>
+
+                <form th:action="@{'/rolls/' + ${roll.id} + '/photos'}" method="post" id="expertPhotoForm">
+                    <input type="hidden" name="latitude" id="expLatitude">
+                    <input type="hidden" name="longitude" id="expLongitude">
+                    <input type="hidden" name="aperture" id="inAperture">
+                    <input type="hidden" name="exposure" id="inExposure">
+                    <input type="hidden" name="whiteBalance" id="inWhiteBalance">
+                    
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button type="button" onclick="closeExpertSave()" class="btn btn-secondary">Cancel</button>
+                        <button type="button" onclick="analyzeAndSave()" class="btn">Analyze & Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Photo Viewer Modal -->
+        <div id="photoViewerModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center;">
+            <div class="photo-viewer-container">
+                <button type="button" class="btn-close-viewer" onclick="closePhotoViewer()">×</button>
+                <div class="photo-viewer-image">
+                    <img id="viewerImage" src="" alt="Photo Full View">
+                </div>
+                <div class="photo-viewer-metadata">
+                    <h3 style="margin-top: 0;">Photo #<span id="viewerNum"></span></h3>
+                    <p class="text-secondary" id="viewerDate" style="margin-bottom: 1.5rem;"></p>
+                    
+                    <div class="metadata-grid">
+                        <div class="metadata-item">
+                            <span class="metadata-label">ISO</span>
+                            <span class="metadata-value" th:text="${roll.iso}"></span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Aperture</span>
+                            <span class="metadata-value" id="viewerAperture"></span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Exposure</span>
+                            <span class="metadata-value" id="viewerExposure"></span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">WB</span>
+                            <span class="metadata-value" id="viewerWb"></span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 2rem;">
+                        <a id="viewerMapLink" href="#" target="_blank" class="btn btn-block" style="text-align: center;">View on Map</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="app-footer">
+            <p>&copy; 2026 35mmFilm. <a th:href="@{/license}">All rights reserved.</a></p>
+        </footer>
+
+    </div>
+
+    <script>
+        let stream = null;
+
+        function openExpertSave() {
+            const modal = document.getElementById('expertSaveModal');
+            modal.style.display = 'flex';
+            
+            // 1. Iniciar y pedir permisos de cámara
+            const video = document.getElementById('cameraPreview');
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                    .then(function(s) {
+                        stream = s;
+                        video.srcObject = stream;
+                    })
+                    .catch(function(err) {
+                        console.error("Error accessing camera: ", err);
+                        alert("Could not access camera. On iPhone (iOS) ensure:\n1. Web permissions are granted.\n2. You are using HTTPS (not HTTP) if not on localhost.\n\nError: " + err.message);
+                    });
+            } else {
+                alert("Camera API not supported or HTTPS required.");
+            }
+
+            // 2. Pedir permisos de ubicación por adelantado
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        document.getElementById('expLatitude').value = position.coords.latitude;
+                        document.getElementById('expLongitude').value = position.coords.longitude;
+                    }, 
+                    function(error) {
+                        console.warn("Location warning opening modal: ", error.message);
+                    }, 
+                    { enableHighAccuracy: true, timeout: 5000 }
+                );
+            }
+        }
+
+        function closeExpertSave() {
+            const modal = document.getElementById('expertSaveModal');
+            modal.style.display = 'none';
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            
+            // Resetear valores
+            document.getElementById('valAperture').innerText = '--';
+            document.getElementById('valExposure').innerText = '--';
+            document.getElementById('valWhiteBalance').innerText = '--';
+        }
+
+        function analyzeAndSave() {
+            const video = document.getElementById('cameraPreview');
+            const canvas = document.getElementById('cameraCanvas');
+            
+            if (video.videoWidth > 0 && video.videoHeight > 0) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // Analizar la imagen para estimar brillo
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                let r, g, b, avg;
+                let colorSum = 0;
+                let rSum = 0, bSum = 0;
+                
+                for(let x = 0, len = data.length; x < len; x+=4) {
+                    r = data[x];
+                    g = data[x+1];
+                    b = data[x+2];
+                    
+                    avg = Math.floor((r+g+b)/3);
+                    colorSum += avg;
+                    rSum += r;
+                    bSum += b;
+                }
+                
+                let brightness = Math.floor(colorSum / (video.videoWidth * video.videoHeight));
+                
+                // Lógica simulada basada en el brillo de la imagen
+                // Si brightness es alto, hay mucha luz -> Apertura pequeña, Velocidad rápida
+                let aperture = "f/8";
+                let exposure = "1/250";
+                
+                if (brightness > 200) {
+                    aperture = "f/16";
+                    exposure = "1/500";
+                } else if (brightness > 150) {
+                    aperture = "f/11";
+                    exposure = "1/250";
+                } else if (brightness > 100) {
+                    aperture = "f/8";
+                    exposure = "1/125";
+                } else if (brightness > 50) {
+                    aperture = "f/5.6";
+                    exposure = "1/60";
+                } else {
+                    aperture = "f/2.8";
+                    exposure = "1/30";
+                }
+                
+                // Estimar balance de blancos (muy básico)
+                let rAvg = rSum / (video.videoWidth * video.videoHeight);
+                let bAvg = bSum / (video.videoWidth * video.videoHeight);
+                
+                let whiteBalance = "Auto";
+                if (rAvg > bAvg + 20) {
+                    whiteBalance = "Incandescente";
+                } else if (bAvg > rAvg + 20) {
+                    whiteBalance = "Sombra";
+                } else if (brightness > 150) {
+                    whiteBalance = "Soleado";
+                } else {
+                    whiteBalance = "Nublado";
+                }
+                
+                // Actualizar UI
+                document.getElementById('valAperture').innerText = aperture;
+                document.getElementById('valExposure').innerText = exposure;
+                document.getElementById('valWhiteBalance').innerText = whiteBalance;
+                
+                document.getElementById('inAperture').value = aperture;
+                document.getElementById('inExposure').value = exposure;
+                document.getElementById('inWhiteBalance').value = whiteBalance;
+                
+                // Pausar el video para dar feedback visual
+                video.pause();
+                
+                // Obtener ubicación y guardar
+                if (!document.getElementById('expLatitude').value && navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function(position) {
+                        document.getElementById('expLatitude').value = position.coords.latitude;
+                        document.getElementById('expLongitude').value = position.coords.longitude;
+                        setTimeout(() => document.getElementById('expertPhotoForm').submit(), 500);
+                    }, function(error) {
+                        console.error("Error getting location: " + error.message);
+                        alert("Could not get location at this time.\nEnsure permissions are enabled. Saving without coordinates...");
+                        setTimeout(() => document.getElementById('expertPhotoForm').submit(), 500);
+                    }, { enableHighAccuracy: true, timeout: 5000 });
+                } else {
+                    // Si ya tenemos la ubicación o no hay API, enviar
+                    setTimeout(() => document.getElementById('expertPhotoForm').submit(), 500);
+                }
+            } else {
+                alert("Camera not ready or permissions not granted.");
+            }
+        }
+
+        function addPhoto() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    document.getElementById('latitude').value = position.coords.latitude;
+                    document.getElementById('longitude').value = position.coords.longitude;
+                    document.getElementById('addPhotoForm').submit();
+                }, function(error) {
+                    console.error("Error getting location: " + error.message);
+                    alert("Could not get location. Check browser permissions.\nError: " + error.message + "\nSaving photo without coordinates...");
+                    document.getElementById('addPhotoForm').submit();
+                }, { enableHighAccuracy: true, timeout: 5000 });
+            } else {
+                alert("Geolocation not supported or HTTPS required.\nSaving photo without coordinates...");
+                document.getElementById('addPhotoForm').submit();
+            }
+        }
+
+        function toggleUploadMode(e) {
+            e.preventDefault();
+            const galleryView = document.getElementById('gallery-view');
+            const uploadView = document.getElementById('upload-view');
+            const btn = e.target;
+            
+            if (uploadView.style.display === 'none') {
+                uploadView.style.display = 'block';
+                galleryView.style.display = 'none';
+                btn.textContent = 'View Gallery';
+            } else {
+                uploadView.style.display = 'none';
+                galleryView.style.display = 'grid';
+                btn.textContent = 'Upload Photos';
+            }
+        }
+
+        // Drag and drop logic for upload zones
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const mode = params.get('mode');
+            const galleryView = document.getElementById('gallery-view');
+            const uploadView = document.getElementById('upload-view');
+            const toggleBtn = document.querySelector('a[onclick*="toggleUploadMode"]');
+            if (mode === 'upload' && uploadView && galleryView) {
+                uploadView.style.display = 'block';
+                galleryView.style.display = 'none';
+                if (toggleBtn) {
+                    toggleBtn.textContent = 'View Gallery';
+                }
+            }
+            
+            const uploadZones = document.querySelectorAll('.upload-zone');
+            
+            uploadZones.forEach(zone => {
+                zone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    zone.style.borderColor = 'var(--accent)';
+                    zone.style.backgroundColor = 'var(--bg-hover)';
+                });
+                
+                zone.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    zone.style.borderColor = 'var(--border-color)';
+                    zone.style.backgroundColor = 'transparent';
+                });
+                
+                zone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    zone.style.borderColor = 'var(--border-color)';
+                    zone.style.backgroundColor = 'transparent';
+                    
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                        const input = zone.querySelector('input[type="file"]');
+                        input.files = e.dataTransfer.files;
+                        zone.submit();
+                    }
+                });
+            });
+        });
+
+        // Photo Viewer Modal Logic
+        function openPhotoViewer(element) {
+            const modal = document.getElementById('photoViewerModal');
+            
+            // Extraer datos del elemento clicado
+            const url = element.getAttribute('data-url');
+            const num = element.getAttribute('data-num');
+            const date = element.getAttribute('data-date');
+            const aperture = element.getAttribute('data-aperture');
+            const exposure = element.getAttribute('data-exposure');
+            const wb = element.getAttribute('data-wb');
+            const lat = element.getAttribute('data-lat');
+            const lng = element.getAttribute('data-lng');
+            
+            // Rellenar modal
+            document.getElementById('viewerImage').src = url;
+            document.getElementById('viewerNum').innerText = num;
+            document.getElementById('viewerDate').innerText = date;
+            document.getElementById('viewerAperture').innerText = aperture;
+            document.getElementById('viewerExposure').innerText = exposure;
+            document.getElementById('viewerWb').innerText = wb;
+            
+            const mapLink = document.getElementById('viewerMapLink');
+            if (lat && lng && lat !== '0.0' && lng !== '0.0') {
+                mapLink.href = `https://www.google.com/maps?q=${lat},${lng}`;
+                mapLink.style.display = 'block';
+            } else {
+                mapLink.style.display = 'none';
+            }
+            
+            // Mostrar modal
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Prevenir scroll en el fondo
+        }
+
+        function closePhotoViewer() {
+            const modal = document.getElementById('photoViewerModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = ''; // Restaurar scroll
+            document.getElementById('viewerImage').src = ''; // Limpiar imagen
+        }
+        
+        // Cerrar modal al hacer clic fuera del contenedor
+        document.getElementById('photoViewerModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePhotoViewer();
+            }
+        });
+    </script>
+    <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function() {
+        navigator.serviceWorker.register("/service-worker.js");
+      });
+    }
+    </script>
+</body>
+</html>

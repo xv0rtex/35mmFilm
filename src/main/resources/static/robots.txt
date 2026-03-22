@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /register
+Disallow: /dashboard
+Disallow: /cameras/
+Disallow: /rolls/
+Disallow: /photos/
+Disallow: /gallery
+Disallow: /profile
+Disallow: /images/uploads/
+
+Sitemap: https://filmpin.com/sitemap.xml

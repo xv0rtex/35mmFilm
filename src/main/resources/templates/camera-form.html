@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Camera - 35mmFilm</title>
+    <meta name="theme-color" content="#121212">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" type="image/png" th:href="@{/favicon.png}">
+    <link rel="apple-touch-icon" th:href="@{/favicon.png}">
+    <link rel="manifest" th:href="@{/manifest.webmanifest}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZHLJ07G3SG"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-ZHLJ07G3SG');
+</script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a th:href="@{/dashboard}" class="navbar-brand">
+                <img th:src="@{/favicon.png}" alt="Logo">
+                35mmFilm
+            </a>
+            <div class="navbar-nav">
+                <a th:href="@{/dashboard}">Back to Dashboard</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="auth-container" style="max-width: 600px;">
+            <h2 class="text-center" th:text="${camera.id == null ? 'Add New Camera' : 'Edit Camera'}">Add New Camera</h2>
+            
+            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+            <form th:action="${camera.id == null ? '/cameras' : '/cameras/' + camera.id}" th:object="${camera}" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="name">Camera Name</label>
+                    <input type="text" id="name" th:field="*{name}" required>
+                </div>
+                <div class="form-group">
+                    <label for="purchaseDate">Purchase Date</label>
+                    <input type="date" id="purchaseDate" th:field="*{purchaseDate}" required>
+                </div>
+                <div class="form-group">
+                    <label for="type">Type</label>
+                    <select id="type" th:field="*{type}" required>
+                        <option value="ANALOG">Analog</option>
+                        <option value="DIGITAL">Digital</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" th:field="*{description}" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="image">Camera Image</label>
+                    <input type="file" id="image" name="image" accept="image/*" capture="environment">
+                </div>
+                <button type="submit" class="btn btn-block">Save Camera</button>
+            </form>
+        </div>
+        <footer class="app-footer">
+            <p>&copy; 2026 35mmFilm. <a th:href="@{/license}">All rights reserved.</a></p>
+        </footer>
+    </div>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function() {
+    navigator.serviceWorker.register("/service-worker.js");
+  });
+}
+</script>
+</body>
+</html>

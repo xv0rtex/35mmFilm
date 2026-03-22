@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Photo - 35mmFilm</title>
+    <meta name="theme-color" content="#121212">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" type="image/png" th:href="@{/favicon.png}">
+    <link rel="apple-touch-icon" th:href="@{/favicon.png}">
+    <link rel="manifest" th:href="@{/manifest.webmanifest}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZHLJ07G3SG"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-ZHLJ07G3SG');
+</script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a th:href="@{/dashboard}" class="navbar-brand">
+                <img th:src="@{/favicon.png}" alt="Logo">
+                35mmFilm
+            </a>
+            <div class="navbar-nav">
+                <a th:href="@{'/rolls/' + ${photo.filmRoll.id}}">Back to Roll</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="auth-container" style="max-width: 600px;">
+            <h2 class="text-center">Edit Photo #<span th:text="${photo.photoNumber}">1</span></h2>
+            
+            <form th:action="@{'/photos/' + ${photo.id}}" method="post">
+                <div class="form-group">
+                    <label for="timestamp">Date & Time</label>
+                    <input type="datetime-local" id="timestamp" name="timestamp" th:value="${#temporals.format(photo.timestamp, 'yyyy-MM-dd''T''HH:mm')}" required>
+                </div>
+                <div class="form-group">
+                    <label for="latitude">Latitude</label>
+                    <input type="number" id="latitude" name="latitude" th:value="${photo.latitude}" step="any" required>
+                </div>
+                <div class="form-group">
+                    <label for="longitude">Longitude</label>
+                    <input type="number" id="longitude" name="longitude" th:value="${photo.longitude}" step="any" required>
+                </div>
+                <div class="form-group">
+                    <label for="aperture">Aperture</label>
+                    <input type="text" id="aperture" name="aperture" th:value="${photo.aperture}" placeholder="e.g. f/8">
+                </div>
+                <div class="form-group">
+                    <label for="exposure">Exposure</label>
+                    <input type="text" id="exposure" name="exposure" th:value="${photo.exposure}" placeholder="e.g. 1/125">
+                </div>
+                <div class="form-group">
+                    <label for="whiteBalance">White Balance</label>
+                    <input type="text" id="whiteBalance" name="whiteBalance" th:value="${photo.whiteBalance}" placeholder="e.g. Sunny">
+                </div>
+                <div class="form-group mt-4">
+                    <a th:href="'https://www.google.com/maps?q=' + ${photo.latitude} + ',' + ${photo.longitude}" target="_blank" class="btn btn-secondary">Check on Map</a>
+                </div>
+                <button type="submit" class="btn btn-block mt-4">Save Changes</button>
+            </form>
+            
+            <form th:action="@{'/photos/' + ${photo.id} + '/delete'}" method="post" onsubmit="return confirm('Are you sure you want to delete this photo?');" class="mt-4">
+                <button type="submit" class="btn btn-danger btn-block">Delete Photo</button>
+            </form>
+        </div>
+        <footer class="app-footer">
+            <p>&copy; 2026 35mmFilm. <a th:href="@{/license}">All rights reserved.</a></p>
+        </footer>
+    </div>
+</body>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function() {
+    navigator.serviceWorker.register("/service-worker.js");
+  });
+}
+</script>
+</html>

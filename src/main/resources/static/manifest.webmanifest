@@ -1,0 +1,21 @@
+{
+  "name": "35mmFilm",
+  "short_name": "35mmFilm",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#121212",
+  "description": "Gestiona cámaras, rollos y fotos analógicas",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

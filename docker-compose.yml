@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  spring-app:
+    build: .
+    container_name: spring-app
+    ports:
+      - "8080:8080"
+    volumes:
+      # Montar el código fuente para ver cambios en directo
+      - .:/home/35mmfilm
+      # Montar la carpeta /home/data/uploads a la carpeta donde la app guarda las imágenes
+      - /home/data/uploads:/home/35mmfilm/uploads
+      # Montar los logs si lo necesitas
+      - /home/data/logs:/home/35mmfilm/logs
+    env_file:
+      - .env
+    restart: unless-stopped

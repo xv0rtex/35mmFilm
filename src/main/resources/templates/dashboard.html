@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - 35mmFilm</title>
+    <meta name="theme-color" content="#121212">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" type="image/png" th:href="@{/favicon.png}">
+    <link rel="apple-touch-icon" th:href="@{/favicon.png}">
+    <link rel="manifest" th:href="@{/manifest.webmanifest}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZHLJ07G3SG"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-ZHLJ07G3SG');
+</script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a th:href="@{/dashboard}" class="navbar-brand">
+                <img th:src="@{/favicon.png}" alt="Logo">
+                35mmFilm
+            </a>
+            <div class="navbar-nav">
+                <a th:href="@{/profile}" style="text-decoration: none; color: var(--text); font-weight: 500;">
+                    <span class="desktop-only">Welcome, </span><span th:text="${username}">User</span>
+                </a>
+                <form th:action="@{/logout}" method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-logout" style="background:none; border:none; padding:0; color:var(--text); cursor:pointer; font-size:1rem; margin-left: 15px;">Logout</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- Global Stats Section -->
+        <a th:href="@{/gallery}" class="card mb-4" style="display: block; text-decoration: none; border-color: var(--text-primary); cursor: pointer; background-color: var(--bg-base); transition: transform 0.2s ease;">
+            <div class="card-body text-center">
+                <p style="font-size: 1.1rem; color: var(--text-primary); margin: 0;">
+                    <strong th:text="${username}">Username</strong>, you've shot <strong th:text="${totalPhotos}">0</strong> photos &mdash; roughly <strong th:text="${filmLength}">0 cm</strong> of film.
+                </p>
+            </div>
+        </a>
+
+        <!-- Active Rolls Section -->
+        <div th:if="${not #lists.isEmpty(activeRolls)}" class="mb-4">
+            <h2 style="font-size: 1.15rem; color: var(--text-secondary); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">Active Rolls</h2>
+            <div class="grid">
+                <div th:each="roll : ${activeRolls}" class="card" style="border-color: var(--text-primary);">
+                    <div class="card-body">
+                        <div class="flex-between" style="margin-bottom: 0.5rem;">
+                            <span class="badge" th:text="${roll.brand}" style="margin: 0;">Brand</span>
+                            <span class="badge" th:text="'ISO ' + ${roll.iso}" style="margin: 0; background-color: var(--accent-bg); color: var(--accent-fg);">ISO</span>
+                        </div>
+                        <h3 th:text="${roll.name}">Roll Name</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary);">In: <span th:text="${roll.camera.name}">Camera Name</span></p>
+                        <a th:href="@{'/rolls/' + ${roll.id}}" class="btn btn-block" style="background-color: var(--text-primary); color: var(--bg-base);">View Roll</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-between mb-4 mt-4">
+            <h2>My Cameras</h2>
+            <a th:href="@{/cameras/new}" class="btn">Add Camera</a>
+        </div>
+
+        <div class="grid">
+            <div th:each="camera : ${cameras}" class="card">
+                <img th:if="${camera.imagePath}" th:src="@{${camera.imagePath}}" alt="Camera Image" class="card-img-top">
+                <div th:unless="${camera.imagePath}" class="card-img-top" style="display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">
+                    <span>No Image</span>
+                </div>
+                <div class="card-body">
+                    <span class="badge" th:text="${camera.type}">DIGITAL</span>
+                    <h3 th:text="${camera.name}">Camera Name</h3>
+                    <p th:text="${camera.description}">Description</p>
+                    <a th:href="@{'/cameras/' + ${camera.id}}" class="btn btn-block">View Details</a>
+                </div>
+            </div>
+        </div>
+        
+        <div th:if="${#lists.isEmpty(cameras)}" class="text-center">
+            <p>You haven't added any cameras yet.</p>
+        </div>
+
+        <footer class="app-footer">
+            <p>&copy; 2026 35mmFilm. <a th:href="@{/license}">All rights reserved.</a></p>
+        </footer>
+    </div>
+</body>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function() {
+    navigator.serviceWorker.register("/service-worker.js");
+  });
+}
+</script>
+</html>
